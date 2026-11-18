@@ -8,7 +8,7 @@
     "url": "git+https://github.com/souljorje/netlifyignore.git"
   },
   "bin": {
-    "netlifyignore": "./cli.mjs"
+    "netlifyignore": "cli.mjs"
   },
   "files": [
     "cli.mjs",
