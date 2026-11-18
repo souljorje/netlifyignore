@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { execFileSync, spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { devNull, tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import process from 'node:process'
@@ -8,6 +8,7 @@ import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 
 const script = fileURLToPath(new URL('./netlifyignore.mjs', import.meta.url))
+const cli = fileURLToPath(new URL('./cli.mjs', import.meta.url))
 
 function fixture(t) {
   const cwd = mkdtempSync(join(tmpdir(), 'netlifyignore-test-'))
@@ -81,4 +82,30 @@ test('checks both sides of moves and lets builds proceed without a baseline', (t
   assert.equal(run('', head), 1)
   assert.equal(run('missing-commit', head), 1)
   assert.equal(run(head, commit()), 0)
+})
+
+test('installs from a nested directory and preserves an existing custom hook', (t) => {
+  const { cwd, write } = fixture(t)
+  write('docs/index.md')
+  function install(...args) {
+    const result = spawnSync(process.execPath, [cli, 'install', ...args], {
+      cwd: join(cwd, 'docs'),
+      encoding: 'utf8',
+    })
+    assert.ifError(result.error)
+    return result
+  }
+
+  assert.equal(install().status, 0)
+  assert.equal(install().status, 0)
+  assert.deepEqual(readFileSync(join(cwd, 'scripts/netlifyignore.mjs')), readFileSync(script))
+
+  const customPath = 'tools/custom-hook.mjs'
+  assert.equal(install(customPath).status, 0)
+  assert.deepEqual(readFileSync(join(cwd, customPath)), readFileSync(script))
+  write(customPath, '// custom hook')
+  const result = install(customPath)
+  assert.equal(result.status, 1)
+  assert.match(result.stderr, /File already exists/)
+  assert.equal(readFileSync(join(cwd, customPath), 'utf8'), '// custom hook')
 })

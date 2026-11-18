@@ -1,0 +1,23 @@
+{
+  "name": "netlifyignore",
+  "version": "0.1.0",
+  "description": "Skip Netlify builds using .netlifyignore rules",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/souljorje/netlifyignore.git"
+  },
+  "bin": {
+    "netlifyignore": "./cli.mjs"
+  },
+  "files": [
+    "cli.mjs",
+    "netlifyignore.mjs"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test"
+  }
+}
